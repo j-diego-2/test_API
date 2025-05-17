@@ -61,13 +61,14 @@
                     echo "<p>Teléfono: " . htmlspecialchars($usuario['phone'] ?? '') . "</p>";
                     echo "<p>Fecha de Registro: " . htmlspecialchars($usuario['created'] ?? '') . "</p>";
                     echo "<p>Correo: " . htmlspecialchars($usuario['email'] ?? '') . "</p>";
+                    echo "<p>Imagen: " . htmlspecialchars($usuario['image'] ?? '') . "</p>";
 
-                    if (!empty($usuario['image'])) {
+                    /* if (!empty($usuario['image'])) {
                         echo "<p>Imagen de perfil:</p>";
                         echo "<img src='" . htmlspecialchars($usuario['image']) . "' alt='Imagen del usuario' style='max-width:200px; height:auto;'/>";
                     } else {
                         echo "<img src='assets\img\perfil.jpg' style='max-width:80px; height:auto;'/>";
-                    }
+                    } */
                 } else {
                     echo "<div class='alert alert-warning mt-3' role='alert'>Usuario no encontrado.</div>";
                 }

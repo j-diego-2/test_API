@@ -117,7 +117,7 @@
                                     <span class="input-group-text">Nombre(s):</span>
                                     <input type="text" class="form-control" placeholder="--"
                                         name="name" required minlength="2" id="inputName"
-                                        aria-label="name" aria-describedby="name">
+                                        aria-label="name" aria-describedby="name" disabled>
 
                                     <div class="invalid-feedback">Por favor ingresa un nombre válido (mínimo 2 caracteres).</div>
                                 </div>
@@ -126,7 +126,7 @@
                                     <span class="input-group-text">Apellidos:</span>
                                     <input type="text" class="form-control" placeholder="--"
                                         name="lastName" required minlength="2" id="inputLastName"
-                                        aria-label="lastName" aria-describedby="lastName">
+                                        aria-label="lastName" aria-describedby="lastName" disabled>
 
                                     <div class="invalid-feedback">Por favor ingresa los apellidos.</div>
                                 </div>
@@ -135,7 +135,7 @@
                                     <span class="input-group-text">Telefono:</span>
                                     <input type="text" class="form-control" placeholder="--"
                                         name="phone" required pattern="\d{7,15}" id="inputPhone"
-                                        aria-label="phone" aria-describedby="phone">
+                                        aria-label="phone" aria-describedby="phone" disabled>
 
                                     <div class="invalid-feedback">Por favor ingresa un número válido (7 a 15 dígitos).</div>
                                 </div>
@@ -144,7 +144,7 @@
                                     <span class="input-group-text">Correo:</span>
                                     <input type="text" class="form-control" placeholder="--"
                                         required minlength="5" maxlength="20" name="email" id="inputEmail"
-                                        aria-label="email" aria-describedby="email">
+                                        aria-label="email" aria-describedby="email" disabled>
                                     <div class="invalid-feedback">Por favor ingresa una direccion de correo valida.</div>
                                 </div>
                                 <button type="submit" class="btn btn-primary mb-2">Modificar</button>
@@ -159,7 +159,7 @@
                             <span class="input-group-text">Contraseña:</span>
                             <input type="password" class="form-control" placeholder="--"
                                 name="password" required minlength="8" id="inputPassword"
-                                aria-label="password" aria-describedby="password">
+                                aria-label="password" aria-describedby="password" disabled>
 
                             <div class="invalid-feedback">La contraseña debe tener al menos 8 caracteres.</div>
                         </div>
@@ -168,7 +168,7 @@
                             <span class="input-group-text">Repetir contraseña:</span>
                             <input type="password" class="form-control" placeholder="--"
                                 name="password2" aria-label="password2" id="inputPassword2"
-                                aria-describedby="password2">
+                                aria-describedby="password2" disabled>
 
                             <div class="invalid-feedback">Las contraseñas deben ser iguales.</div>
                         </div>
@@ -213,6 +213,7 @@
                 form.querySelector('#inputLastName').value = button.getAttribute('data-lastname');
                 form.querySelector('#inputPhone').value = button.getAttribute('data-phone');
                 form.querySelector('#inputEmail').value = button.getAttribute('data-email');
+
             });
 
 
@@ -222,6 +223,14 @@
                 e.preventDefault()
                 e.stopPropagation()
 
+                const disabledInputs = []
+                form.querySelectorAll('input:not([type="hidden"])').forEach(input => {
+                    if (input.disabled) {
+                        disabledInputs.push(input)
+                        input.disabled = false
+                    }
+                });
+
                 const formData = new FormData(form);
 
                 const data = {
@@ -230,9 +239,11 @@
                     LastName: formData.get('lastName'),
                     Phone: formData.get('phone'),
                     Email: formData.get('email'),
+                    Password: formData.get('password'),
+                    Image: formData.get('profileImage')
                 };
 
-                /* const password = formData.get('password');
+                const password = formData.get('password');
                 const password2 = formData.get('password2');
 
                 if (password || password2) {
@@ -249,9 +260,9 @@
                     }
 
                     data.password = password;
-                } */
+                }
 
-                /* const fileInput = form.querySelector('#inputFile')
+                const fileInput = form.querySelector('#inputFile')
                 const file = fileInput.files[0];
 
                 if (fileInput && fileInput.size > 0) {
@@ -261,12 +272,52 @@
                 } else {
                     data.profileImage = null;
                 }
- */
+
                 console.info('Datos a enviar:', data);
                 actualizarUsuario(data)
             })
 
-            
+            function actualizarUsuario(data) {
+                const url = 'middleware/editar_usuario.php';
+
+                const payload = {
+                    user: {
+                        UserId: data.UserId,
+                        Name: data.Name,
+                        LastName: data.LastName,
+                        Phone: data.Phone,
+                        Email: data.Email,
+                        Password: data.Password,
+                        Image: data.Image
+                    }
+                }
+
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                }
+
+                fetch(url, options)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            mostrarMensaje('Usuario actualizado correctamente', 'success');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            mostrarMensaje('Error al actualizar el usuario: ' + result.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarMensaje('Error al actualizar el usuario', 'danger');
+                    });
+            }
+
             function cargarImagen(formData, data) {
                 fetch('middleware/cargar_imagen.php', {
                         method: 'POST',
@@ -296,11 +347,28 @@
                     });
 
             }
+
+
+
+
+
+
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+
+            function mostrarMensaje(texto, tipo) {
+                mensaje.innerHTML = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                ${texto}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`
+            }
+
+
         })
     </script>
 
-    
-    <script src="assets/js/upd_user.js"></script>
     <script src="assets/js/upd_password.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
