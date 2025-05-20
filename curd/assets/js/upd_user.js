@@ -1,15 +1,17 @@
-function actualizarUsuario(data) {
+function actualizarUsuario(dataUsuario) {
   const url = "middleware/editar_usuario.php";
 
   const payload = {
     user: {
-      UserId: data.UserId,
-      Name: data.Name,
-      LastName: data.LastName,
-      Phone: data.Phone,
-      Email: data.Email,
+      UserId: dataUsuario.UserId,
+      Name: dataUsuario.Name,
+      LastName: dataUsuario.LastName,
+      Phone: dataUsuario.Phone,
+      Email: dataUsuario.Email,
     },
   };
+
+
 
   const options = {
     method: "POST",
@@ -26,7 +28,7 @@ function actualizarUsuario(data) {
         mostrarMensaje("Usuario actualizado correctamente", "success");
         setTimeout(() => {
           location.reload();
-        }, 2000);
+        }, 3000);
       } else {
         mostrarMensaje(
           "Error al actualizar el usuario: " + result.message,

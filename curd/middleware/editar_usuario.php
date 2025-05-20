@@ -1,11 +1,8 @@
 <?php
-
+include('rutas.php');
 // Leer JSON enviado por fetch()
 $inputJSON = file_get_contents('php://input');
 $input = json_decode($inputJSON, true);
-
-var_dump($input);
-var_dump($inputJSON);
 
 
 // Verificamos que el objeto "user" exista
@@ -21,17 +18,6 @@ $name = isset($userData['Name']) ? strip_tags($userData['Name']) : '';
 $lastName = isset($userData['LastName']) ? strip_tags($userData['LastName']) : '';
 $phone = isset($userData['Phone']) ? strip_tags($userData['Phone']) : '';
 $email = isset($userData['Email']) ? strip_tags($userData['Email']) : '';
-
-
-
-/* $userData = strip_tags($input['user']) ?? '';
-$userId = strip_tags($userData['UserId']) ?? '';
-$name = strip_tags($userData['Name']) ?? '';
-$lastName = strip_tags($userData['LastName']) ?? '';
-$phone = strip_tags($userData['Phone']) ?? '';
-$email = strip_tags($userData['Email']) ?? '';
-$password = strip_tags($userData['Password']) ?? ''; */
-
 
 
 // Validaciones
@@ -60,10 +46,9 @@ if (!empty($lastName)) $data["lastName"] = $lastName;
 if (!empty($phone)) $data["phone"] = $phone;
 if (!empty($email)) $data["email"] = $email;
 
-// Llamada cURL a la API
-$apiUrl = 'https://localhost:7240/user/edit';
 
-$ch = curl_init($apiUrl);
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, Rutas::$urls . Rutas::$editarUsuario);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);

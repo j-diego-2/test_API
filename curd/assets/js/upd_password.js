@@ -1,17 +1,38 @@
-addEventListener("DOMContentLoaded", function () {
-    const modal = document.getElementById('miModal');
-    const form = document.getElementById('formUsuario');
+function actualizarContrasena(dataPassword) {
+    const url = "middleware/cambiar_contrasena.php";
 
-    modal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        userId = form.querySelector('#inputUserId').value = button.getAttribute('data-userid');
-        return userId;
-        // console.log('Valor del id', userId);   
+    const payload = {
+        user: {
+            UserId: dataPassword.UserId,
+            Password: dataPassword.Password,
+        },
+    };
+   
+    const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  };
+
+  fetch(url, options)
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.success) {
+        mostrarMensaje("Contraseña actualizada", "success");
+        setTimeout(() => {
+          location.reload();
+        }, 3000);
+      } else {
+        mostrarMensaje(
+          "Error al actualizar el usuario: " + result.message,
+          "danger"
+        );
+      }
     })
-
-    const formPassword = document.getElementById('formPassword');
-
-    const password = formPassword.querySelector('#inputPassword1');
-    const password2 = formPassword.querySelector('#inputPassword2');
-     
-});
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarMensaje("Error al actualizar el usuario", "danger");
+    });
+}

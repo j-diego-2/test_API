@@ -1,42 +1,75 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['userId'])) {
-    $userId = $_POST['userId'];
-    $deleteUrl = "https://localhost:7240/user/delete/$userId";
+include('rutas.php');
 
-    // echo "URL generada: $deleteUrl<br>";
-    // echo "UserId recibido: " . htmlspecialchars($_POST['userId']) . "<br>";
+header('Content-Type: application/json');
 
+$rawInput = file_get_contents("php://input");
+$data = json_decode($rawInput, true);
 
-    // Aquí podrías hacer la petición DELETE si deseas
-    
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['user']['UserId'])) {
+    $userId = $data['user']['UserId'];
+
+    // Llamada a la API externa
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $deleteUrl);
+    curl_setopt($ch, CURLOPT_URL, Rutas::$urls . Rutas::$eliminarUsuario . $userId);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
     $response = curl_exec($ch);
+    $error = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-    if (curl_errno($ch)) {
-        //echo "<div class='alert alert-danger'>Error al eliminar usuario: " . curl_error($ch) . "</div>";
+    // Validar si hubo error en la conexión CURL
+    if ($error) {
         echo json_encode([
             'success' => false, 
             'message' => 'Error al tratar de eliminar el usuario',
-            'error' => curl_error($ch)]);
-    } else {
-        // echo "<div class='alert alert-success'>Respuesta de la API: $response</div>";
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Usuario eliminado correctamente',
-            'response' => $response]);
+            'error' => $error
+        ]);
+        exit;
     }
 
-    curl_close($ch);
-    } else {
-        // echo "<div class='alert alert-warning'>No se proporcionó un userId válido.</div>";
+    // Decodificar respuesta de la API
+    $apiResponse = json_decode($response, true);
+
+    if ($httpCode >= 200 && $httpCode < 300 && isset($apiResponse['success']) && $apiResponse['success']) {
+        // Si la API eliminó el usuario con éxito, entonces eliminamos la imagen
+        $imagePath = __DIR__ . '/../assets/img/' . $userId . '.jpg';  // Asegúrate que esta ruta coincida con la del script de subida
+        $imageDeleted = false;
+        $imageMessage = '';
+
+        if (file_exists($imagePath)) {
+            if (unlink($imagePath)) {
+                $imageDeleted = true;
+                $imageMessage = 'Imagen eliminada correctamente.';
+            } else {
+                $imageMessage = 'Error al eliminar la imagen.';
+            }
+        } else {
+            $imageMessage = 'La imagen no existe.';
+        }
+
         echo json_encode([
-            'success' => false, 
-            'message' => 'No se proporcionó un userId válido']);
+            'success' => true,
+            'message' => 'Usuario eliminado correctamente.',
+            'imageDeleted' => $imageDeleted,
+            'imageMessage' => $imageMessage,
+            'apiResponse' => $apiResponse
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'La API no confirmó la eliminación del usuario.',
+            'apiResponse' => is_string($response) ? substr($response, 0, 500) : 'No se pudo interpretar',
+            'statusCode' => $httpCode
+        ]);
     }
-?>
+} else {
+    echo json_encode([
+        'success' => false,
+        'message' => 'No se proporcionó un userId válido'
+    ]);
+}

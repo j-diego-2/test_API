@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
+include('rutas.php');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -61,7 +62,7 @@ $dataToSend = json_encode([
 
 // Enviar datos a la API externa
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "https://localhost:7240/user/create");
+curl_setopt($ch, CURLOPT_URL, Rutas::$urls . Rutas::$agregarUsuario);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

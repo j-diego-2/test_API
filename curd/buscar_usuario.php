@@ -9,8 +9,6 @@
 </head>
 
 <body>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
     <div class="container mt-4">
         <h1 class="text-center mb-4">Buscar Usuario</h1>
 
@@ -22,14 +20,15 @@
             <button type="submit" class="btn btn-primary">Buscar</button>
             <a href="listar_usuarios.php" class="btn btn-primary" role="button">Regresar</a>
         </form>
-        
+
 
         <?php
+        include('middleware/rutas.php');
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['userId'])) {
             $userId = $_POST['userId'];
 
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, "https://localhost:7240/user/data/$userId");
+            curl_setopt($ch, CURLOPT_URL, Rutas::$urls . Rutas::$consultarUsuario . $userId);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -55,20 +54,20 @@
                     echo "</pre>"; */
 
 
-                    echo "<p class='mt-3'>ID: " . htmlspecialchars($usuario['userId'] ?? '')  . "</p>";
+                    echo "<p class='mt-3' id='textUserId'>ID: " . htmlspecialchars($usuario['userId'] ?? '')  . "</p>";
                     echo "<p>Nombre: " . htmlspecialchars($usuario['name'] ?? '') . "</p>";
                     echo "<p>Apellido: " . htmlspecialchars($usuario['lastName'] ?? '') . "</p>";
                     echo "<p>Teléfono: " . htmlspecialchars($usuario['phone'] ?? '') . "</p>";
                     echo "<p>Fecha de Registro: " . htmlspecialchars($usuario['created'] ?? '') . "</p>";
                     echo "<p>Correo: " . htmlspecialchars($usuario['email'] ?? '') . "</p>";
-                    echo "<p>Imagen: " . htmlspecialchars($usuario['image'] ?? '') . "</p>";
+                    // echo "<p>Imagen: " . htmlspecialchars($usuario['image'] ?? '') . "</p>";
 
-                    /* if (!empty($usuario['image'])) {
+                    if (!empty($usuario['image'])) {
                         echo "<p>Imagen de perfil:</p>";
                         echo "<img src='" . htmlspecialchars($usuario['image']) . "' alt='Imagen del usuario' style='max-width:200px; height:auto;'/>";
                     } else {
                         echo "<img src='assets\img\perfil.jpg' style='max-width:80px; height:auto;'/>";
-                    } */
+                    }
                 } else {
                     echo "<div class='alert alert-warning mt-3' role='alert'>Usuario no encontrado.</div>";
                 }
@@ -80,11 +79,67 @@
         }
         ?>
 
-        <form action="middleware\eliminar_usuario.php" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este usuario?');">
-            <input type="hidden" name="userId" value="<?php echo htmlspecialchars($usuario['userId']); ?>">
-            <button type="submit" class="btn btn-danger mt-3">Eliminar Usuario</button>
-        </form>
+        <div class="container">
+            <button type="button" class="btn btn-danger mt-3" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+            Eliminar Usuario</button>
+        </div>
+
+        <div class="modal" tabindex="-1" id="confirmDeleteModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div id="mensaje" class="container-sm mt-3"></div>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Está seguro que deseas eliminar este usuario?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <form method="POST">
+                            <input id=deleteId type="hidden" name="userId" value="<?php echo htmlspecialchars($usuario['userId']); ?>">
+                            <button type="submit" class="btn btn-danger" id=btnDeleteUsr>Confirmar</button>
+                        </form>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>                       
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const deleteModal = document.getElementById('confirmDeleteModal');
+            const btnDeleteUsr = document.getElementById('btnDeleteUsr');
+
+
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget; // Button that triggered the modal
+                const input = document.getElementById('deleteId'); // Input field in the modal
+                const valueId = input.value; // Get the value of the input field
+
+                // console.log(valueId);
+
+                btnDeleteUsr.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation()
+
+                    const dataUser = {
+                        user: {
+                            UserId: valueId
+                        }
+                    }
+                    console.info(dataUser);
+                    eliminarUsuario(dataUser);
+                });
+ 
+            });
+
+        });
+    </script>
+
+    <script src="assets/js/del_user.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
 </body>
 
 </html>
